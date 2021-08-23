@@ -1,0 +1,3 @@
+= cmp-conjure
+
+https://github.com/hrsh7th/nvim-cmp[nvim-cmp] source for https://github.com/Olical/conjure[conjure].
