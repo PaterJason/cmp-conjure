@@ -11,7 +11,7 @@ source.new = function()
 end
 
 function source:is_available()
-  return vim.tbl_contains(require'conjure.config'.filetypes(), vim.o.filetype)
+  return require'conjure.client'.current()
 end
 
 local kind_lookup = {
@@ -23,15 +23,16 @@ local kind_lookup = {
   N = 9,
 }
 
-local regex = vim.regex[[[0-9a-zA-Z*+!\-_'?<>=/.:]*$]]
+function source:get_keyword_pattern()
+  return [[\%([0-9a-zA-Z\*\+!\-_'?<>=\/.:]*\)]]
+end
 
 function source:get_trigger_characters()
-  return {'*', '+', '!', '-', '_', "'", '?', '<', '>', '=', '/', '.', ':'}
+  return {'/', '.', ':'}
 end
 
 function source:complete(request, callback)
-  local s, e = regex:match_str(request.context.cursor_before_line)
-  local input = string.sub(request.context.cursor_before_line, s + 1, e)
+  local input = string.sub(request.context.cursor_before_line, request.offset)
 
   local completions = conjure_eval['completions-sync'](input)
   local items = {}
