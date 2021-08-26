@@ -14,21 +14,33 @@ function source:is_available()
   return require'conjure.client'.current()
 end
 
-local kind_lookup = {
-  F = 3,
-  K = 14,
-  M = 3,
-  S = 18,
-  V = 6,
-  N = 9,
-}
-
 function source:get_keyword_pattern()
   return [[\%([0-9a-zA-Z\*\+!\-_'?<>=\/.:]*\)]]
 end
 
 function source:get_trigger_characters()
   return {'/', '.', ':'}
+end
+
+local kind_tbl = {
+  clojure = {
+    C = cmp.lsp.CompletionItemKind.Class,
+    F = cmp.lsp.CompletionItemKind.Function,
+    K = cmp.lsp.CompletionItemKind.Keyword,
+    M = cmp.lsp.CompletionItemKind.Function,
+    N = cmp.lsp.CompletionItemKind.Module,
+    S = cmp.lsp.CompletionItemKind.Function,
+    V = cmp.lsp.CompletionItemKind.Variable,
+  },
+}
+
+local function lookup_kind(s)
+  local ft_kind = kind_tbl[vim.bo.filetype]
+  if ft_kind then
+    return ft_kind[s]
+  else
+    return
+  end
 end
 
 function source:complete(request, callback)
@@ -44,7 +56,7 @@ function source:complete(request, callback)
         kind = cmp.lsp.MarkupKind.Markdown,
         value = completion.info,
       },
-      kind = kind_lookup[completion.kind],
+      kind = lookup_kind(completion.kind),
       dup = 0,
     })
   end
