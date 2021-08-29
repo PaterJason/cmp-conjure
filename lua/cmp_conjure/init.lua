@@ -1,12 +1,13 @@
 local cmp = require'cmp'
 local conjure_eval = require'conjure.eval'
+local conjure_promise = require'conjure.promise'
 
 local source = {}
 
 source.new = function()
   local self = setmetatable({}, { __index = source })
   self.promise_id = nil
-  self.input = nil
+  self.timer = nil
   return self
 end
 
@@ -43,24 +44,49 @@ local function lookup_kind(s)
   end
 end
 
+local function close(self)
+  local completions
+  if self.timer then
+    self.timer:stop()
+    self.timer:close()
+    self.timer = nil
+  end
+  if self.promise_id then
+    completions = conjure_promise.close(self.promise_id)
+    self.promise_id = nil
+  end
+  return completions
+end
+
 function source:complete(request, callback)
   local input = string.sub(request.context.cursor_before_line, request.offset)
 
-  local completions = conjure_eval['completions-sync'](input)
-  local items = {}
+  close(self)
+  self.promise_id = conjure_eval['completions-promise'](input)
+  self.timer = vim.loop.new_timer()
 
-  for _, completion in ipairs(completions) do
-    table.insert(items, {
-      label = completion.word,
-      documentation = {
-        kind = cmp.lsp.MarkupKind.Markdown,
-        value = completion.info,
-      },
-      kind = lookup_kind(completion.kind),
-      dup = 0,
-    })
-  end
-  callback(items)
+  local i = 0
+  self.timer:start(50, 50, vim.schedule_wrap(function()
+    if conjure_promise['done?'](self.promise_id) then
+      local items = {}
+      local completions = close(self)
+      for _, completion in ipairs(completions) do
+        table.insert(items, {
+          label = completion.word,
+          documentation = {
+            kind = cmp.lsp.MarkupKind.Markdown,
+            value = completion.info,
+          },
+          kind = lookup_kind(completion.kind),
+        })
+      end
+      callback(items)
+    elseif i >= 200 then
+      close(self)
+      callback()
+    end
+    i = i + 1
+  end))
 end
 
 return source
