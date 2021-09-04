@@ -1,13 +1,10 @@
 local cmp = require'cmp'
 local conjure_eval = require'conjure.eval'
-local conjure_promise = require'conjure.promise'
 
 local source = {}
 
 source.new = function()
   local self = setmetatable({}, { __index = source })
-  self.promise_id = nil
-  self.timer = nil
   return self
 end
 
@@ -35,58 +32,32 @@ local kind_tbl = {
   },
 }
 
-local function lookup_kind(s)
-  local ft_kind = kind_tbl[vim.bo.filetype]
-  if ft_kind then
-    return ft_kind[s]
+local function lookup_kind(s, ft)
+  local ft_kinds = kind_tbl[ft]
+  if ft_kinds then
+    return ft_kinds[s]
   else
     return
   end
 end
 
-local function close(self)
-  local completions
-  if self.timer then
-    self.timer:stop()
-    self.timer:close()
-    self.timer = nil
-  end
-  if self.promise_id then
-    completions = conjure_promise.close(self.promise_id)
-    self.promise_id = nil
-  end
-  return completions
-end
-
 function source:complete(request, callback)
   local input = string.sub(request.context.cursor_before_line, request.offset)
 
-  close(self)
-  self.promise_id = conjure_eval['completions-promise'](input)
-  self.timer = vim.loop.new_timer()
-
-  local i = 0
-  self.timer:start(50, 50, vim.schedule_wrap(function()
-    if conjure_promise['done?'](self.promise_id) then
-      local items = {}
-      local completions = close(self)
-      for _, completion in ipairs(completions) do
-        table.insert(items, {
-          label = completion.word,
-          documentation = {
-            kind = cmp.lsp.MarkupKind.Markdown,
-            value = completion.info,
-          },
-          kind = lookup_kind(completion.kind),
-        })
-      end
-      callback(items)
-    elseif i >= 200 then
-      close(self)
-      callback()
+  conjure_eval.completions(input, function(results)
+    local items = {}
+    for _, completion in ipairs(results) do
+      table.insert(items, {
+        label = completion.word,
+        documentation = {
+          kind = cmp.lsp.MarkupKind.Markdown,
+          value = completion.info,
+        },
+        kind = lookup_kind(completion.kind, request.context.filetype),
+      })
     end
-    i = i + 1
-  end))
+    callback(items)
+  end)
 end
 
 return source
