@@ -30,6 +30,14 @@ local kind_tbl = {
     S = cmp.lsp.CompletionItemKind.Function,
     V = cmp.lsp.CompletionItemKind.Variable,
   },
+  fennel = {
+    ['boolean'] = cmp.lsp.CompletionItemKind.Value,
+    ['function'] = cmp.lsp.CompletionItemKind.Function,
+    ['nil'] = cmp.lsp.CompletionItemKind.Value,
+    ['number'] = cmp.lsp.CompletionItemKind.Value,
+    ['string'] = cmp.lsp.CompletionItemKind.Value,
+    ['table'] = cmp.lsp.CompletionItemKind.Struct,
+  },
 }
 
 local function lookup_kind(s, ft)
