@@ -9,7 +9,11 @@ source.new = function()
 end
 
 function source:is_available()
-  return require'conjure.client'.current()
+  if require'conjure.client'.current() == nil then
+    return false
+  else
+    return true
+  end
 end
 
 function source:get_keyword_pattern()
@@ -58,7 +62,7 @@ function source:complete(request, callback)
       table.insert(items, {
         label = completion.word,
         documentation = {
-          kind = cmp.lsp.MarkupKind.Markdown,
+          kind = cmp.lsp.MarkupKind.PlainText,
           value = completion.info,
         },
         kind = lookup_kind(completion.kind, request.context.filetype),
