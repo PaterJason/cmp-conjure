@@ -1,5 +1,5 @@
-local cmp = require'cmp'
-local conjure_eval = require'conjure.eval'
+local cmp = require "cmp"
+local conjure_eval = require "conjure.eval"
 
 local source = {}
 
@@ -9,7 +9,7 @@ source.new = function()
 end
 
 function source:is_available()
-  if require'conjure.client'.current() == nil then
+  if require("conjure.client").current() == nil then
     return false
   else
     return true
@@ -21,7 +21,7 @@ function source:get_keyword_pattern()
 end
 
 function source:get_trigger_characters()
-  return {'/', '.', ':'}
+  return { "/", ".", ":" }
 end
 
 local kind_tbl = {
@@ -35,12 +35,12 @@ local kind_tbl = {
     V = cmp.lsp.CompletionItemKind.Variable,
   },
   fennel = {
-    ['boolean'] = cmp.lsp.CompletionItemKind.Value,
-    ['function'] = cmp.lsp.CompletionItemKind.Function,
-    ['nil'] = cmp.lsp.CompletionItemKind.Value,
-    ['number'] = cmp.lsp.CompletionItemKind.Value,
-    ['string'] = cmp.lsp.CompletionItemKind.Value,
-    ['table'] = cmp.lsp.CompletionItemKind.Struct,
+    ["boolean"] = cmp.lsp.CompletionItemKind.Value,
+    ["function"] = cmp.lsp.CompletionItemKind.Function,
+    ["nil"] = cmp.lsp.CompletionItemKind.Value,
+    ["number"] = cmp.lsp.CompletionItemKind.Value,
+    ["string"] = cmp.lsp.CompletionItemKind.Value,
+    ["table"] = cmp.lsp.CompletionItemKind.Struct,
   },
 }
 
