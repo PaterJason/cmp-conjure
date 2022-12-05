@@ -17,7 +17,7 @@ function source:is_available()
 end
 
 function source:get_keyword_pattern()
-  return [[\%([0-9a-zA-Z\*\+!\-_'?<>=\/.:]*\)]]
+  return [[\k\+]]
 end
 
 function source:get_trigger_characters()
@@ -29,8 +29,10 @@ local kind_tbl = {
     C = cmp.lsp.CompletionItemKind.Class,
     F = cmp.lsp.CompletionItemKind.Function,
     K = cmp.lsp.CompletionItemKind.Keyword,
+    L = cmp.lsp.CompletionItemKind.Variable,
     M = cmp.lsp.CompletionItemKind.Function,
     N = cmp.lsp.CompletionItemKind.Module,
+    R = cmp.lsp.CompletionItemKind.File,
     S = cmp.lsp.CompletionItemKind.Function,
     V = cmp.lsp.CompletionItemKind.Variable,
   },
@@ -44,15 +46,6 @@ local kind_tbl = {
   },
 }
 
-local function lookup_kind(s, ft)
-  local ft_kinds = kind_tbl[ft]
-  if ft_kinds then
-    return ft_kinds[s]
-  else
-    return
-  end
-end
-
 function source:complete(request, callback)
   local input = string.sub(request.context.cursor_before_line, request.offset)
 
@@ -61,11 +54,12 @@ function source:complete(request, callback)
     for _, completion in ipairs(results) do
       table.insert(items, {
         label = completion.word,
+        detail = completion.menu,
         documentation = {
           kind = cmp.lsp.MarkupKind.PlainText,
           value = completion.info,
         },
-        kind = lookup_kind(completion.kind, request.context.filetype),
+        kind = vim.tbl_get(kind_tbl, request.context.filetype, completion.kind),
       })
     end
     callback(items)
