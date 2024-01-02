@@ -59,8 +59,9 @@ function source:complete(request, callback)
           kind = cmp.lsp.MarkupKind.PlainText,
           value = completion.info,
         },
-        kind = (completion.kind and vim.tbl_get(kind_tbl, request.context.filetype, completion.kind))
-          or cmp.lsp.CompletionItemKind.Text,
+        kind = request.context.filetype
+          and completion.kind
+          and vim.tbl_get(kind_tbl, request.context.filetype, completion.kind),
       })
     end
     callback(items)
